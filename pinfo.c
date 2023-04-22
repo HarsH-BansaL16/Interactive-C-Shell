@@ -62,7 +62,8 @@ void P_Info(char *Command)
     ptr = fopen(Open_File, "r");
     if (ptr == NULL)
     {
-        RED if (token == NULL)
+        RED 
+        if (token == NULL)
         {
             printf("Error: The Process does not Exist.");
         }

@@ -6,8 +6,20 @@ extern char *Home_Dir;
 
 extern int time_spent;
 
+extern int Ctrl_C;
+
 extern char **Exit_Command;
 extern int exit_command;
+
+extern int output_redirection;
+extern int output_append;
+extern int input_redirection;
+int fd_ptr;
+
+extern char *Prev_Dir;
+extern char *System_Root;
+
+extern int flag;
 
 extern Background Processes[50];
 
@@ -92,12 +104,43 @@ char *Extract_Command(char *Command)
     return token;
 }
 
-void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *flag, char *System_Root)
+void HandleCommand(char *Final_Command, char *Command)
 {
     int bg = 0;
+    char *Command_Duplicate = (char *)malloc(sizeof(char) * 1000);
+    strcpy(Command_Duplicate, Command);
+
+    char **argv = (char **)malloc(sizeof(char *) * 10);
+    char *token = (char *)malloc(sizeof(char) * 1000);
+
     // Getting the Current Working Directory
     char *Curr_Dir = (char *)malloc(sizeof(char) * 1000);
     Curr_Dir = getcwd(Curr_Dir, 1000);
+
+    int pipe = 0;
+    for (int i = 0; i < strlen(Command); i++)
+    {
+        if (Command[i] == '|')
+        {
+            pipe++;
+        }
+    }
+    if (pipe > 0)
+    {
+        pipe_handler(Command);
+        return;
+    }
+
+    if (and == 0)
+    {
+        Command = HandleRedirection(Command_Duplicate);
+
+        if (strcmp(Command, "false") == 0)
+        {
+            return;
+        }
+        Final_Command = (Extract_Command(Command));
+    }
 
     // Handling Foreground and Background
     if (and > 0)
@@ -115,6 +158,7 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
 
         int x = 0;
         int l = 0;
+
         for (int i = 0; i < strlen(Command); i++)
         {
             if (Command[i] == '&')
@@ -163,12 +207,39 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
                 {
                     char *token = (char *)malloc(sizeof(char) * 1000);
 
-                    strcpy(Command, Array[i]);
+                    output_append = 0;
+                    input_redirection = 0;
+                    output_redirection = 0;
 
-                    // printf("-%s-\n-%s-\n",token,Array[i]);
-                    token = strtok(Array[i], " ");
+                    for (l = 0; l < strlen(Array[i]); l++)
+                    {
+                        if (Array[i][l] == '>')
+                        {
+                            output_redirection = 1;
+                            if (Array[i][l] == '>')
+                            {
+                                output_append = 1;
+                            }
+                        }
+                        else if (Array[i][l] == '<')
+                        {
+                            input_redirection = 1;
+                        }
+                    }
 
-                    strcpy(Final_Command, token);
+                    if (output_append == 1 || output_redirection == 1 || input_redirection == 1)
+                    {
+                        Command = HandleRedirection(Array[i]);
+                        Final_Command = Extract_Command(Command);
+                    }
+                    else
+                    {
+                        strcpy(Command, Array[i]);
+
+                        token = strtok(Array[i], " ");
+
+                        strcpy(Final_Command, token);
+                    }
 
                     goto x;
                 }
@@ -176,16 +247,43 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
                 {
                     char *token = (char *)malloc(sizeof(char) * 1000);
 
-                    strcpy(Command, Array[i]);
+                    output_append = 0;
+                    input_redirection = 0;
+                    output_redirection = 0;
 
-                    // printf("-%s-\n-%s-\n",token,Array[i]);
-                    token = strtok(Array[i], " ");
+                    for (l = 0; l < strlen(Array[i]); l++)
+                    {
+                        if (Array[i][l] == '>')
+                        {
+                            output_redirection = 1;
+                            if (Array[i][l + 1] == '>')
+                            {
+                                output_append = 1;
+                            }
+                        }
+                        else if (Array[i][l] == '<')
+                        {
+                            input_redirection = 1;
+                        }
+                    }
 
-                    strcpy(Final_Command, token);
+                    if (output_append == 1 || output_redirection == 1 || input_redirection == 1)
+                    {
+                        Command = HandleRedirection(Array[i]);
+                        Final_Command = Extract_Command(Command);
+                    }
+                    else
+                    {
+                        strcpy(Command, Array[i]);
+
+                        token = strtok(Array[i], " ");
+
+                        strcpy(Final_Command, token);
+                    }
 
                     bg = 1;
 
-                    goto x;
+                    goto z;
 
                 y:
                     continue;
@@ -196,13 +294,18 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
     else
     {
     x:
+        if (Ctrl_C == 1 && bg == 0)
+        {
+            return;
+        }
         if (strcasecmp(Final_Command, "Quit") == 0 || strcasecmp(Final_Command, "Q") == 0 || strcasecmp(Final_Command, "exit") == 0)
         {
             PrintCompletedProcess();
             printf("\033[0;41m");
             printf("Terminal Successfully Exited!");
-            RESET
+            RESET;
             printf("\n");
+            Disable_Raw_Mode();
             exit(0);
         }
         else if (strcmp(Final_Command, "echo") == 0)
@@ -215,7 +318,7 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
         }
         else if (strcmp(Final_Command, "cd") == 0)
         {
-            cd(Command, flag, Prev_Dir);
+            cd(Command, &flag, &Prev_Dir);
         }
         else if (strcmp(Final_Command, "ls") == 0)
         {
@@ -233,6 +336,23 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
         {
             P_Info(Command);
         }
+        else if (strcmp(Final_Command, "jobs") == 0)
+        {
+            jobs(Command);
+        }
+        else if (strcmp(Final_Command, "sig") == 0)
+        {
+            sig(Command);
+        }
+        else if (strcmp(Final_Command, "fg") == 0)
+        {
+            time_spent = time(NULL);
+            fg(Command);
+        }
+        else if (strcmp(Final_Command, "bg") == 0)
+        {
+            bg_handle(Command);
+        }
         else if (strcmp(Final_Command, "history") == 0)
         {
             char *token = (char *)malloc(sizeof(char) * 1000);
@@ -241,9 +361,9 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
 
             if (token != NULL)
             {
-                RED
-                    printf("Error: Too Many Arguements to Function Call");
-                RESET
+                RED;
+                printf("Error: Too Many Arguements to Function Call");
+                RESET;
                 printf("\n");
                 return;
             }
@@ -256,9 +376,7 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
         }
         else
         {
-            char **argv = (char **)malloc(sizeof(char *) * 10);
-            char *token = (char *)malloc(sizeof(char) * 1000);
-
+        z:
             token = strtok(Command, " \n");
 
             int i = 0;
@@ -276,6 +394,7 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
             {
                 BackGround(argv[0], argv);
                 bg = 0;
+                Reset_IO_Direction();
                 goto y;
             }
             else
@@ -306,21 +425,33 @@ void HandleCommand(char *Final_Command, char *Command, char **Prev_Dir, int *fla
                             return;
                         }
                         printf("bash: %s: command not found", Final_Command);
-                        printf("\n");
                         RESET
+                        printf("\n");
                         exit(0);
                     }
                 }
                 else
                 {
-                    int status;
+                    // Updating the Process in the ForeGround Array
+                    UpdateForeGroundProcess(pid, Final_Command);
 
+                    int status;
                     waitpid(pid, &status, WUNTRACED | WCONTINUED);
+
                     double end = time(NULL);
                     time_spent += (end - begin);
+
+                    // Updating the Process when it has Exited
+                    RemoveForeGroundProcess(pid);
                 }
             }
         }
     }
+    if (output_redirection == 1 || output_append == 1 || input_redirection == 1)
+    {
+        close(fd_ptr);
+        Reset_IO_Direction();
+    }
+
     return;
 }

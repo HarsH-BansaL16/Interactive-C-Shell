@@ -5,4 +5,6 @@
 
 void Prompt();
 
+void Reset_IO_Direction();
+
 #endif

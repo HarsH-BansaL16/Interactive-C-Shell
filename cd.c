@@ -7,6 +7,9 @@ extern char *Home_Dir;
 extern char **Exit_Command;
 extern int exit_command;
 
+extern int output_redirection;
+extern int output_append;
+
 void cd(char *Command, int *flag, char **Prev_Dir)
 {
     // Getting the Current Working Directory
@@ -19,14 +22,20 @@ void cd(char *Command, int *flag, char **Prev_Dir)
 
     if (token != NULL)
     {
-        char * token2 = (char *)malloc(sizeof(char) * 1000);
-        strcpy(token2,token);
+        char *token2 = (char *)malloc(sizeof(char) * 1000);
+        strcpy(token2, token);
         token2 = strtok(NULL, " \t\n");
         if (token2 != NULL)
         {
-            RED
-                printf("Error: Too Many Arguements to Function Call");
-            RESET
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RED
+            }
+            printf("Error: Too Many Arguements to Function Call");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
             printf("\n");
             return;
         }
@@ -47,9 +56,15 @@ void cd(char *Command, int *flag, char **Prev_Dir)
     {
         if (strcmp(Curr_Dir, Home_Dir) == 0)
         {
-            printf("\033[0;44m");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                PWD_COLOR
+            }
             printf("%s", Home_Dir);
-            RESET
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
             printf("\n");
         }
         chdir("..");
@@ -70,8 +85,16 @@ void cd(char *Command, int *flag, char **Prev_Dir)
         *Prev_Dir = Curr_Dir;
         if (retval == -1)
         {
-            printf("\033[0;41m");
-            printf("cd: no such file or directory.\n");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RED_BACK
+            }
+            printf("cd: no such file or directory.");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
+            printf("\n");
         }
         return;
     }
@@ -89,8 +112,16 @@ void cd(char *Command, int *flag, char **Prev_Dir)
     {
         if (*flag == -1)
         {
-            printf("\033[0;31m");
-            printf("bash: cd: OLDPWD not set\n");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RED
+            }
+            printf("bash: cd: OLDPWD not set");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
+            printf("\n");
         }
         else
         {
@@ -114,7 +145,10 @@ void cd(char *Command, int *flag, char **Prev_Dir)
         }
         if (retval == -1)
         {
-            printf("\033[0;41m");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RED_BACK
+            }
             if (strcmp(dir, "") == 0)
             {
                 chdir(Home_Dir);
@@ -138,7 +172,12 @@ void cd(char *Command, int *flag, char **Prev_Dir)
                 *Prev_Dir = Curr_Dir;
                 return;
             }
-            printf("cd: no such file or directory: %s\n", dir);
+            printf("cd: no such file or directory: %s", dir);
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
+            printf("\n");
         }
         return;
     }

@@ -10,6 +10,9 @@ extern int exit_command;
 
 extern Background Processes[50];
 
+extern int stdout_ptr;
+extern int stdin_ptr;
+
 void Check_Exit_Status()
 {
     int status;
@@ -38,9 +41,12 @@ void PrintCompletedProcess()
 {
     for (int i = 0; i < exit_command; i++)
     {
+        int Curr_Output = dup(1);
+        dup2(stdout_ptr, 1);
         YELLOW
         printf("%s", Exit_Command[i]);
         RESET
+        dup2(Curr_Output, 1);
     }
     exit_command = 0;
 }
@@ -59,16 +65,25 @@ void Handler()
 
 void UpdateProcess(pid_t pid, char *Command)
 {
-    for (int i = 0; i < 50; i++)
+    int temp = 0;
+    for (int i = 49; i >= 0; i--)
     {
-        if (Processes[i].pid == -1)
+        if (Processes[i].pid != -1)
         {
-            Processes[i].pid = pid;
-            Processes[i].Command = Command;
-            Processes[i].Serial = i + 1;
-            return;
+            temp = i;
+            break;
         }
     }
+    temp++;
+
+    if (Processes[temp].pid == -1 && temp <= 49)
+    {
+        Processes[temp].pid = pid;
+        Processes[temp].Command = Command;
+        Processes[temp].Serial = temp;
+        Processes[temp].Flag = 0;
+    }
+
     return;
 }
 
@@ -78,9 +93,13 @@ void PrintBeginProcess(pid_t pid)
     {
         if (Processes[i].pid == pid)
         {
+            int Curr_Output = dup(1);
+            dup2(stdout_ptr, 1);
             MAGENTA
-            printf("[%d] %d\n", Processes[i].Serial, pid);
+            printf("[%d] %d", Processes[i].Serial, pid);
             RESET
+            printf("\n");
+            dup2(Curr_Output, 1);
             return;
         }
     }

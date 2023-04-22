@@ -9,7 +9,7 @@ void Pwd()
 
     Curr_Dir = getcwd(Curr_Dir, 1000);
 
-    printf("\033[0;44m");
+    PWD_COLOR
     printf("%s", Curr_Dir);
     RESET
     printf("\n");

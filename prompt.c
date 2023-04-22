@@ -4,13 +4,34 @@ extern int and;
 
 extern int time_spent;
 
-extern char ** Exit_Command;
+extern char **Exit_Command;
 extern int exit_command;
+
+extern int Ctrl_C;
 
 extern char *Home_Dir;
 
+extern int stdout_ptr;
+extern int stdin_ptr;
+
+extern int output_redirection;
+extern int output_append;
+extern int input_redirection;
+
+void Reset_IO_Direction()
+{
+    // Configuring the Stdin and Stdout
+    dup2(stdout_ptr, 1);
+    dup2(stdin_ptr, 0);
+    output_redirection = 0;
+    output_append = 0;
+    input_redirection = 0;
+}
+
 void Prompt()
 {
+    Reset_IO_Direction();
+
     and = 0;
 
     char *User_Name = (char *)malloc(sizeof(char) * 1000);
@@ -40,7 +61,7 @@ void Prompt()
     printf("<%s@%s:", User_Name, Host_Name);
     printf("\033[0;34m");
     printf("%s", Curr_Dir);
-    if (time_spent >= 1)
+    if (time_spent >= 1 && Ctrl_C == 0)
     {
         printf("\033[0;35m");
         printf(" took %ds ", time_spent);
@@ -49,4 +70,6 @@ void Prompt()
     printf("\033[0;32m");
     printf("> ");
     printf("\033[0;36m");
+
+    Ctrl_C = 0;
 }

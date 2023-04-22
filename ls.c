@@ -7,6 +7,9 @@ extern char *Home_Dir;
 extern char **Exit_Command;
 extern int exit_command;
 
+extern int output_redirection;
+extern int output_append;
+
 void Color_Coding_without_Directory(char *File_Name)
 {
     struct stat sfile;
@@ -15,19 +18,43 @@ void Color_Coding_without_Directory(char *File_Name)
     {
         if ((sfile.st_mode & S_IFDIR) != 0)
         {
-            printf("\033[0;36m%s\n", File_Name);
-            printf("\033[00;37m");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                CYAN
+            }
+            printf("%s", File_Name);
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
+            printf("\n");
             return;
         }
         else if (((sfile.st_mode & S_IXOTH) == 1) || ((sfile.st_mode & S_IXUSR) == 1) || ((sfile.st_mode & S_IXGRP) == 1))
         {
-            printf("\033[0;32m%s\n", File_Name);
-            printf("\033[00;37m");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                GREEN
+            }
+            printf("%s", File_Name);
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
+            printf("\n");
             return;
         }
     }
-    printf("\033[0;37m%s\n", File_Name);
-    printf("\033[00;37m");
+    if (output_append == 0 && output_redirection == 0)
+    {
+        printf("\033[00;37m");
+    }
+    printf("%s", File_Name);
+    if (output_append == 0 && output_redirection == 0)
+    {
+        RESET
+    }
+    printf("\n");
     return;
 }
 
@@ -39,19 +66,43 @@ void Color_Coding(char *File_Name)
     {
         if ((sfile.st_mode & S_IFDIR) != 0)
         {
-            printf("\033[0;36m%s\n", HandleDirectory(File_Name));
-            printf("\033[00;37m");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                CYAN
+            }
+            printf("%s", HandleDirectory(File_Name));
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
+            printf("\n");
             return;
         }
         else if (((sfile.st_mode & S_IXOTH) == 1) || ((sfile.st_mode & S_IXUSR) == 1) || ((sfile.st_mode & S_IXGRP) == 1))
         {
-            printf("\033[00;32m%s\n", HandleDirectory(File_Name));
-            printf("\033[00;37m");
+            if (output_append == 0 && output_redirection == 0)
+            {
+                GREEN
+            }
+            printf("%s", HandleDirectory(File_Name));
+            if (output_append == 0 && output_redirection == 0)
+            {
+                RESET
+            }
+            printf("\n");
             return;
         }
     }
-    printf("\033[00;37m%s\n", HandleDirectory(File_Name));
-    printf("\033[00;37m");
+    if (output_append == 0 && output_redirection == 0)
+    {
+        printf("\033[00;37m");
+    }
+    printf("%s", File_Name);
+    if (output_append == 0 && output_redirection == 0)
+    {
+        RESET
+    }
+    printf("\n");
     return;
 }
 
@@ -128,13 +179,23 @@ void LS_L(bool flag_a, char *Curr_Dir)
         }
     }
 
-    printf("\033[00;37m");
-
-    printf("total %d\n", total);
+    if (output_append == 0 && output_redirection == 0)
+    {
+        printf("\033[00;37m");
+    }
+    printf("total %d", total/2);
+    if (output_append == 0 && output_redirection == 0)
+    {
+        RESET
+    }
+    printf("\n");
 
     for (int i = 0; i < n; i++)
     {
-        printf("\033[00;37m");
+        if (output_append == 0 && output_redirection == 0)
+        {
+            printf("\033[00;37m");
+        }
         if (flag_a == false)
         {
             if (Files[i][0] == '.')
@@ -349,6 +410,7 @@ void LS(char *Command, char *Curr_Dir)
     }
 
     char *temp2 = strtok(token2, " \t\n");
+    Curr_Dir[strlen(Curr_Dir)] = '\0';
 
     // Implementing LS for -a and -l flags Seperately
     if (temp2 == NULL)
@@ -430,6 +492,7 @@ void LS(char *Command, char *Curr_Dir)
 
                 char *Curr_Dir_Temp = (char *)malloc(sizeof(char) * 1000);
                 Curr_Dir_Temp = getcwd(Curr_Dir_Temp, 1000);
+                Curr_Dir_Temp[strlen(Curr_Dir_Temp)] = '\0';
 
                 Only_LS_a(Curr_Dir_Temp);
 
@@ -441,6 +504,7 @@ void LS(char *Command, char *Curr_Dir)
 
                 char *Curr_Dir_Temp = (char *)malloc(sizeof(char) * 1000);
                 Curr_Dir_Temp = getcwd(Curr_Dir_Temp, 1000);
+                Curr_Dir_Temp[strlen(Curr_Dir_Temp)] = '\0';
 
                 Only_LS(Curr_Dir_Temp);
 
@@ -453,6 +517,7 @@ void LS(char *Command, char *Curr_Dir)
         }
         else if (strcmp(Files[i], ".") == 0)
         {
+            Curr_Dir[strlen(Curr_Dir)] = '\0';
             if (flag_l == true)
             {
                 LS_L(flag_a, Curr_Dir);
@@ -473,6 +538,7 @@ void LS(char *Command, char *Curr_Dir)
         else if (strcmp(Files[i], "~") == 0)
         {
             chdir(Home_Dir);
+            Home_Dir[strlen(Home_Dir)] = '\0';
             if (flag_l == true)
             {
                 LS_L(flag_a, Home_Dir);
@@ -514,6 +580,7 @@ void LS(char *Command, char *Curr_Dir)
                     chdir(Files[i]);
 
                     Curr_Temp_Dir = getcwd(Curr_Temp_Dir, 1000);
+                    Curr_Temp_Dir[strlen(Curr_Temp_Dir)] = '\0';
 
                     if (flag_l == true)
                     {
