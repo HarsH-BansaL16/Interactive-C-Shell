@@ -81,7 +81,7 @@ char *Handle_Tab(char *Command)
                 }
             }
         }
-        Prompt();
+        prompt();
         return Command;
     }
 
@@ -171,14 +171,14 @@ char *Handle_Tab(char *Command)
     if (count_match == 0)
     {
         printf("\r");
-        Prompt();
+        prompt();
         printf("%s", Command);
         return Command;
     }
     else if (count_match == 1)
     {
         printf("\r");
-        Prompt();
+        prompt();
         char *New_String = (char *)malloc(sizeof(char) * 1000);
         New_String = RemoveString(Command, search);
         strcat(New_String, Matches[0]);
@@ -252,14 +252,14 @@ char *Handle_Tab(char *Command)
             }
         }
 
-        Prompt();
+        prompt();
 
         char *New_String = (char *)malloc(sizeof(char) * 1000);
         New_String = RemoveString(Command, search);
 
-        if(strcmp(final,"") == 0)
+        if (strcmp(final, "") == 0)
         {
-            strcpy(final,search);
+            strcpy(final, search);
         }
 
         strcat(New_String, final);

@@ -59,9 +59,8 @@ struct Info
     int Serial;
     char *Command;
     int Status; // For Changing the Indexing Method
-    int Flag; // For Jobs
+    int Flag;   // For Jobs
 };
 typedef struct Info Background;
-
 
 #endif

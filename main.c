@@ -71,7 +71,7 @@ int main()
         char *Command_Temp = (char *)malloc(sizeof(char) * 1000);
         char *Command = (char *)malloc(sizeof(char) * 1000);
 
-        Prompt(Home_Dir);
+        prompt(Home_Dir);
 
         char c = 0;
         int pt = 0;

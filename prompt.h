@@ -3,7 +3,7 @@
 
 #include "headers.h"
 
-void Prompt();
+void prompt();
 
 void Reset_IO_Direction();
 

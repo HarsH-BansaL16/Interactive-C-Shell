@@ -28,7 +28,7 @@ void Reset_IO_Direction()
     input_redirection = 0;
 }
 
-void Prompt()
+void prompt()
 {
     Reset_IO_Direction();
 
