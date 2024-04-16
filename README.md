@@ -3,7 +3,6 @@ Making a shell in C programming language
 
 ```
 Name    : Harsh Bansal
-Roll No : 2021101027
 ```
 
 ---
